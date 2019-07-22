@@ -2,6 +2,7 @@ package org.apache.openwhisk.core.containerpool.kontain
 
 import akka.actor.ActorSystem
 import org.apache.openwhisk.common.{Logging, TransactionId}
+import org.apache.openwhisk.core.containerpool.docker.DockerClientWithFileAccess
 import org.apache.openwhisk.core.containerpool.{Container, ContainerFactory, ContainerFactoryProvider}
 import org.apache.openwhisk.core.entity.{ByteSize, ExecManifest, InvokerInstanceId}
 import org.apache.openwhisk.core.{ConfigKeys, WhiskConfig}
@@ -18,8 +19,11 @@ object KontainContainerFactoryProvider extends ContainerFactoryProvider {
                         instance: InvokerInstanceId,
                         parameters: Map[String, Set[String]]): ContainerFactory = {
 
-    val kontainClient = new KontainClient()(actorSystem.dispatcher, actorSystem, logging)
-    new KontainContainerFactory(instance)(actorSystem, actorSystem.dispatcher, logging,kontainClient)
+    val dockerClient = {
+      new DockerClientWithFileAccess()(actorSystem.dispatcher)(logging, actorSystem)
+    }
+    val kontainClient = new KontainClient(dockerClient)(actorSystem.dispatcher, actorSystem, logging)
+    new KontainContainerFactory(instance)(actorSystem, actorSystem.dispatcher, logging, kontainClient)
   }
 }
 

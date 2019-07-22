@@ -21,14 +21,6 @@ trait KontainApi {
 
   def rm(containerId: ContainerId)(implicit transid: TransactionId): Future[Unit]
 
-  def stop(containerId: ContainerId)(implicit transid: TransactionId): Future[Unit]
-
-  def stopAndRemove(containerId: ContainerId)(implicit transid: TransactionId): Future[Unit] = {
-    for {
-      _ <- stop(containerId)
-      _ <- rm(containerId)
-    } yield Unit
-  }
 }
 
 class KontainClient(dockerClient: DockerClient)(override implicit val executionContext: ExecutionContext,
@@ -38,15 +30,24 @@ class KontainClient(dockerClient: DockerClient)(override implicit val executionC
     with ProcessRunner {
 
   override def inspectIPAddress(containerId: ContainerId)(implicit transid: TransactionId): Future[ContainerAddress] = {
-    // TODO:
-    Future.successful(ContainerAddress(""))
+    dockerClient.inspectIPAddress(containerId, "")
   }
 
   override def run(image: String, args: Seq[String])(implicit transid: TransactionId): Future[ContainerId] = {
-    // TODO:
-    ???
+    // TODO: set the correct args
+    dockerClient.run(image, args)
   }
 
+  override def importImage(image: String)(implicit transid: TransactionId): Future[Boolean] = {
+    // For now, we manually load the image to local, so always return success.
+    Future.successful(true)
+  }
+
+  override def rm(containerId: ContainerId)(implicit transid: TransactionId): Future[Unit] = {
+    dockerClient.rm(containerId)
+  }
+
+  // TODO:
   protected def runCmd(cmd: String, args: Seq[String], timeout: Duration)(
     implicit transid: TransactionId): Future[String] = {
     val start = transid.started(
@@ -63,20 +64,4 @@ class KontainClient(dockerClient: DockerClient)(override implicit val executionC
     }
   }
 
-  override def importImage(image: String)(implicit transid: TransactionId): Future[Boolean] = {
-    // TODO:
-    Future.successful(true)
-  }
-
-  override def rm(containerId: ContainerId)(implicit transid: TransactionId): Future[Unit] = {
-    runDockerCmd(Seq("rm", containerId.asString), Duration.Zero).map(_ => ())
-  }
-
-  override def stop(containerId: ContainerId)(implicit transid: TransactionId): Future[Unit] = {
-    runDockerCmd(Seq("stop", containerId.asString), Duration.Zero).map(_ => ())
-  }
-
-  protected def runDockerCmd(args: Seq[String], timeout: Duration)(implicit transid: TransactionId): Future[String] = {
-    runCmd("docker", args, timeout)
-  }
 }
