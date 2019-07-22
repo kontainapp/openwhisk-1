@@ -11,10 +11,6 @@ import org.apache.openwhisk.core.entity.size._
 
 import scala.concurrent.{ExecutionContext, Future}
 
-case class KontainId(asString: String) {
-  require(asString.nonEmpty, "kontainId must not be empty")
-}
-
 object KontainContainer {
 
   def create(transid: TransactionId,
@@ -29,7 +25,7 @@ object KontainContainer {
                                           kontain: KontainApi): Future[KontainContainer] = ???
 }
 
-class KontainContainer(protected val id: ContainerId, protected val addr: ContainerAddress, kontainId: KontainId)(
+class KontainContainer(protected val id: ContainerId, protected val addr: ContainerAddress)(
   implicit
   override protected val as: ActorSystem,
   protected val ec: ExecutionContext,

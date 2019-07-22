@@ -15,20 +15,18 @@ trait KontainApi {
 
   def inspectIPAddress(containerId: ContainerId)(implicit transid: TransactionId): Future[ContainerAddress]
 
-  def containerId(kontainId: KontainId)(implicit transid: TransactionId): Future[ContainerId]
-
-  def run(image: String, args: Seq[String])(implicit transid: TransactionId): Future[KontainId]
+  def run(image: String, args: Seq[String])(implicit transid: TransactionId): Future[ContainerId]
 
   def importImage(image: String)(implicit transid: TransactionId): Future[Boolean]
 
-  def rm(kontainId: KontainId)(implicit transid: TransactionId): Future[Unit]
+  def rm(containerId: ContainerId)(implicit transid: TransactionId): Future[Unit]
 
-  def stop(kontainId: KontainId)(implicit transid: TransactionId): Future[Unit]
+  def stop(containerId: ContainerId)(implicit transid: TransactionId): Future[Unit]
 
-  def stopAndRemove(kontainId: KontainId)(implicit transid: TransactionId): Future[Unit] = {
+  def stopAndRemove(containerId: ContainerId)(implicit transid: TransactionId): Future[Unit] = {
     for {
-      _ <- stop(kontainId)
-      _ <- rm(kontainId)
+      _ <- stop(containerId)
+      _ <- rm(containerId)
     } yield Unit
   }
 }
@@ -44,12 +42,7 @@ class KontainClient(dockerClient: DockerClient)(override implicit val executionC
     Future.successful(ContainerAddress(""))
   }
 
-  override def containerId(kontainId: KontainId)(implicit transid: TransactionId): Future[ContainerId] = {
-    // We container id is the kontain id.
-    return Future.successful(ContainerId(kontainId.asString))
-  }
-
-  override def run(image: String, args: Seq[String])(implicit transid: TransactionId): Future[KontainId] = {
+  override def run(image: String, args: Seq[String])(implicit transid: TransactionId): Future[ContainerId] = {
     // TODO:
     ???
   }
@@ -75,12 +68,12 @@ class KontainClient(dockerClient: DockerClient)(override implicit val executionC
     Future.successful(true)
   }
 
-  override def rm(kontainId: KontainId)(implicit transid: TransactionId): Future[Unit] = {
-    runDockerCmd(Seq("rm", kontainId.asString), Duration.Zero).map(_ => ())
+  override def rm(containerId: ContainerId)(implicit transid: TransactionId): Future[Unit] = {
+    runDockerCmd(Seq("rm", containerId.asString), Duration.Zero).map(_ => ())
   }
 
-  override def stop(kontainId: KontainId)(implicit transid: TransactionId): Future[Unit] = {
-    runDockerCmd(Seq("stop", kontainId.asString), Duration.Zero).map(_ => ())
+  override def stop(containerId: ContainerId)(implicit transid: TransactionId): Future[Unit] = {
+    runDockerCmd(Seq("stop", containerId.asString), Duration.Zero).map(_ => ())
   }
 
   protected def runDockerCmd(args: Seq[String], timeout: Duration)(implicit transid: TransactionId): Future[String] = {
