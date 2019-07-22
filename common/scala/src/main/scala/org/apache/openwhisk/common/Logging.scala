@@ -492,6 +492,12 @@ object LoggingMarkers {
   val INVOKER_TOTALMEM_BLACKBOX = LogMarkerToken(loadbalancer, "totalCapacityBlackBox", counter)(MeasurementUnit.none)
   val INVOKER_TOTALMEM_MANAGED = LogMarkerToken(loadbalancer, "totalCapacityManaged", counter)(MeasurementUnit.none)
 
+
+  def INVOKER_KONTAIN_CMD(cmd: String) =
+    LogMarkerToken(invoker, "kontain", start, Some(cmd), Map("cmd" -> cmd))(MeasurementUnit.time.milliseconds)
+  def INVOKER_KONTAIN_CMD_TIMEOUT(cmd: String) =
+    LogMarkerToken(invoker, "kontain", timeout, Some(cmd), Map("cmd" -> cmd))(MeasurementUnit.none)
+
   val HEALTHY_INVOKER_MANAGED =
     LogMarkerToken(loadbalancer, "totalHealthyInvokerManaged", counter)(MeasurementUnit.none)
   val UNHEALTHY_INVOKER_MANAGED =
