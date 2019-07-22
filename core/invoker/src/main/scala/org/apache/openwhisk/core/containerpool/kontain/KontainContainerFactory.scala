@@ -18,7 +18,7 @@ object KontainContainerFactoryProvider extends ContainerFactoryProvider {
                         instance: InvokerInstanceId,
                         parameters: Map[String, Set[String]]): ContainerFactory = {
 
-    val kontainClient = new KontainClient()(actorSystem.dispatcher)
+    val kontainClient = new KontainClient()(actorSystem.dispatcher, actorSystem, logging)
     new KontainContainerFactory(instance)(actorSystem, actorSystem.dispatcher, logging,kontainClient)
   }
 }
