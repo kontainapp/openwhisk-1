@@ -30,7 +30,7 @@ class KontainContainerFactoryTest
     implicit val tid: TransactionId = TransactionId.testing
     val instanceId = InvokerInstanceId(1, userMemory = 100.MB)
     val factory = KontainContainerFactoryProvider.instance(actorSystem, logging, wskConfig, instanceId, Map.empty)
-    val image = ImageName("whisk/ignite-nodejs-v12:latest")
+    val image = ImageName("kontain/kontain-nodejs-v12:latest")
     val container = factory
       .createContainer(tid, "footest", image, true, 256.MB, 1)
       .futureValue
