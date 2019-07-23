@@ -30,21 +30,27 @@ class KontainClient(dockerClient: DockerClient)(override implicit val executionC
     with ProcessRunner {
 
   override def inspectIPAddress(containerId: ContainerId)(implicit transid: TransactionId): Future[ContainerAddress] = {
+    log.info(this, "inspect the container ip address")
     dockerClient.inspectIPAddress(containerId, "")
   }
 
   override def run(image: String, args: Seq[String])(implicit transid: TransactionId): Future[ContainerId] = {
     // TODO: set the correct args
-    dockerClient.run(image, args)
+    //dockerClient.run(image, args)
+    log.info(this, "kontain run")
+    Future(ContainerId(transid.id))
   }
 
   override def importImage(image: String)(implicit transid: TransactionId): Future[Boolean] = {
-    // For now, we manually load the image to local, so always return success.
+    log.info(this, "importing the image")
+    // For now, we manually load the image to local, so always return success
     Future.successful(true)
   }
 
   override def rm(containerId: ContainerId)(implicit transid: TransactionId): Future[Unit] = {
-    dockerClient.rm(containerId)
+    //dockerClient.rm(containerId)
+    log.info(this, "removing kontain")
+    Future()
   }
 
   // TODO:

@@ -61,12 +61,18 @@ class KontainContainerFactory(instance: InvokerInstanceId)(implicit actorSystem:
                                userProvidedImage: Boolean,
                                memory: ByteSize,
                                cpuShares: Int)(implicit config: WhiskConfig, logging: Logging): Future[Container] = {
+    logging.info(this, "create a container")
     KontainContainer.create(tid, actionImage, memory, cpuShares, Some(name))
   }
 
   /** perform any initialization */
-  override def init(): Unit = ???
+  override def init(): Unit = removeAllContainers()
 
   /** cleanup any remaining Containers; should block until complete; should ONLY be run at startup/shutdown */
-  override def cleanup(): Unit = ???
+  override def cleanup(): Unit = removeAllContainers()
+
+  private def removeAllContainers(): Unit = {
+    // TODO:
+    logging.info(this, "remove all container is called")
+  }
 }
