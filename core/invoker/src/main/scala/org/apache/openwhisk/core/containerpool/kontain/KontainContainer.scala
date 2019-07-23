@@ -30,6 +30,8 @@ object KontainContainer {
                                           kontain: KontainApi): Future[KontainContainer] = {
     implicit val tid: TransactionId = transid
 
+    log.info(this, "is this runnng?")
+
     val args = Seq()
 
     for {
@@ -41,10 +43,14 @@ object KontainContainer {
           else
             Future.failed(BlackboxStartupError(Messages.imagePullError(image.publicImageName)))
       }
-      ip <- kontain.inspectIPAddress(containerId)
-      } yield new KontainContainer(containerId, ip)
-    }
+      ip <- kontain.inspectIPAddress(containerId).recoverWith {
+        case _ =>
+          kontain.rm(containerId)
+          Future.failed(WhiskContainerStartupError(Messages.resourceProvisionError))
+      }
+    } yield new KontainContainer(containerId, ip)
   }
+}
 
 class KontainContainer(protected val id: ContainerId, protected val addr: ContainerAddress)(
   implicit

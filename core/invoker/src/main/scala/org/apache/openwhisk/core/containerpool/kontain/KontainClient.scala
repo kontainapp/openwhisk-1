@@ -31,7 +31,7 @@ class KontainClient(dockerClient: DockerClient)(override implicit val executionC
 
   override def inspectIPAddress(containerId: ContainerId)(implicit transid: TransactionId): Future[ContainerAddress] = {
     log.info(this, "inspect the container ip address")
-    dockerClient.inspectIPAddress(containerId, "")
+    Future(ContainerAddress("localhost"))
   }
 
   override def run(image: String, args: Seq[String])(implicit transid: TransactionId): Future[ContainerId] = {
@@ -50,7 +50,7 @@ class KontainClient(dockerClient: DockerClient)(override implicit val executionC
   override def rm(containerId: ContainerId)(implicit transid: TransactionId): Future[Unit] = {
     //dockerClient.rm(containerId)
     log.info(this, "removing kontain")
-    Future()
+    Future{}
   }
 
   // TODO:

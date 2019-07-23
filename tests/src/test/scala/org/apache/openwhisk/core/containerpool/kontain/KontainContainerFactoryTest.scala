@@ -1,8 +1,9 @@
-package org.apache.openwhisk.core.containerpool.kontain
+package org.apache.openwhisk.core.containerpool.kontain.test
 
 import common.{StreamLogging, WskActorSystem}
 import org.apache.openwhisk.common.TransactionId
 import org.apache.openwhisk.core.WhiskConfig
+import org.apache.openwhisk.core.containerpool.kontain.KontainContainerFactoryProvider
 import org.apache.openwhisk.core.entity.ExecManifest.ImageName
 import org.apache.openwhisk.core.entity.InvokerInstanceId
 import org.apache.openwhisk.core.entity.size._
@@ -24,7 +25,7 @@ class KontainContainerFactoryTest
 
   implicit override val patienceConfig: PatienceConfig = PatienceConfig(timeout = 5.minutes)
 
-  ignore should "launch the kontain container" in {
+  it should "launch the kontain container" in {
     implicit val wskConfig: WhiskConfig = new WhiskConfig(Map.empty)
     implicit val tid: TransactionId = TransactionId.testing
     val instanceId = InvokerInstanceId(1, userMemory = 100.MB)
