@@ -6,7 +6,7 @@
         "default": false,
         "image": {
           "prefix": "kontain",
-          "name": "whisk-nodejs-v12",
+          "name": "whisk-node-12",
           "tag": "latest"
         },
         "deprecated": false,
