@@ -8,7 +8,8 @@ import org.apache.openwhisk.core.entity.{ByteSize, ExecManifest, InvokerInstance
 import org.apache.openwhisk.core.{ConfigKeys, WhiskConfig}
 import pureconfig.loadConfigOrThrow
 
-import scala.concurrent.{ExecutionContext, Future}
+import scala.concurrent.duration._
+import scala.concurrent.{Await, ExecutionContext, Future}
 
 case class KontainConfig(extraArgs: Map[String, Set[String]])
 
@@ -23,16 +24,16 @@ object KontainContainerFactoryProvider extends ContainerFactoryProvider {
       new DockerClientWithFileAccess()(actorSystem.dispatcher)(logging, actorSystem)
     }
     val kontainClient = new KontainClient(dockerClient)(actorSystem.dispatcher, actorSystem, logging)
-    new KontainContainerFactory(instance)(actorSystem, actorSystem.dispatcher, logging, kontainClient)
+    new KontainContainerFactory(dockerClient)(instance)(actorSystem, actorSystem.dispatcher, logging, kontainClient)
   }
 }
 
-class KontainContainerFactory(instance: InvokerInstanceId)(implicit actorSystem: ActorSystem,
-                                                           ec: ExecutionContext,
-                                                           logging: Logging,
-                                                           kontain: KontainApi,
-                                                           kontainConfig: KontainConfig =
-                                                             loadConfigOrThrow[KontainConfig](ConfigKeys.kontain))
+class KontainContainerFactory(docker: DockerClientWithFileAccess)(instance: InvokerInstanceId)(
+  implicit actorSystem: ActorSystem,
+  ec: ExecutionContext,
+  logging: Logging,
+  kontain: KontainApi,
+  kontainConfig: KontainConfig = loadConfigOrThrow[KontainConfig](ConfigKeys.kontain))
     extends ContainerFactory {
 
   /**
@@ -72,7 +73,16 @@ class KontainContainerFactory(instance: InvokerInstanceId)(implicit actorSystem:
   override def cleanup(): Unit = removeAllContainers()
 
   private def removeAllContainers(): Unit = {
-    // TODO:
-    logging.info(this, "remove all container is called")
+    implicit val transid = TransactionId.invoker
+    val cleaning =
+      docker.ps(filters = Seq("name" -> s"${ContainerFactory.containerNamePrefix(instance)}_"), all = true).flatMap {
+        containers =>
+          logging.info(this, s"removing ${containers.size} action containers.")
+          val removals = containers.map { id =>
+            docker.rm(id)
+          }
+          Future.sequence(removals)
+      }
+    Await.ready(cleaning, 30.seconds)
   }
 }
