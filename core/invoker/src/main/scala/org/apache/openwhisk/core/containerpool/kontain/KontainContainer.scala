@@ -30,9 +30,10 @@ object KontainContainer {
                                           kontain: KontainApi): Future[KontainContainer] = {
     implicit val tid: TransactionId = transid
 
-    log.info(this, "is this runnng?")
-
-    val args = Seq()
+    val args = Seq(
+      "--device",
+      "/dev/kvm"
+    )
 
     for {
       ret <- kontain.importImage(image.publicImageName)
