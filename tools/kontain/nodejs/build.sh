@@ -1,0 +1,1 @@
+docker build -t kontain/whisk-node-12:latest .
