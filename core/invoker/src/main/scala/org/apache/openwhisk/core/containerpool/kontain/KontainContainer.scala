@@ -32,7 +32,9 @@ object KontainContainer {
 
     val args = Seq(
       "--device",
-      "/dev/kvm"
+      "/dev/kvm",
+      "--network",
+      "bridge"
     )
 
     for {
