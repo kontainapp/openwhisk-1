@@ -5,6 +5,6 @@ FROM scratch
 COPY --from=ownode /nodejsAction /nodejsAction
 COPY --from=ownode /node_modules /node_modules
 COPY --from=kontain /km /km
-COPY --from=kontain /node/out/Debug/node.km /node.km
+COPY --from=kontain /node/out/Release/node.km /node.km
 
 CMD [ "/km", "/node.km", "/nodejsAction/app.js" ]
