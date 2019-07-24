@@ -34,8 +34,9 @@ object KontainContainer {
       "--device",
       "/dev/kvm",
       "--network",
-      "bridge"
-    )
+      "bridge") ++
+      name.map(n => Seq("--name", n)).getOrElse(Seq.empty)
+
 
     for {
       ret <- kontain.importImage(image.publicImageName)
@@ -67,4 +68,9 @@ class KontainContainer(protected val id: ContainerId, protected val addr: Contai
   override def logs(limit: ByteSize, waitForSentinel: Boolean)(
     implicit transid: TransactionId): Source[ByteString, Any] =
     Source.single(ByteString(LogLine("", "stdout", Instant.now.toString).toJson.compactPrint))
+
+  override def destroy()(implicit transid: TransactionId): Future[Unit] = {
+    super.destroy()
+    kontain.rm(id)
+  }
 }
