@@ -6,8 +6,8 @@ import akka.actor.ActorSystem
 import akka.stream.scaladsl.Source
 import akka.util.ByteString
 import org.apache.openwhisk.common.{Logging, TransactionId}
+import org.apache.openwhisk.core.containerpool._
 import org.apache.openwhisk.core.containerpool.logging.LogLine
-import org.apache.openwhisk.core.containerpool.{BlackboxStartupError, Container, ContainerAddress, ContainerId, WhiskContainerStartupError}
 import org.apache.openwhisk.core.entity.ByteSize
 import org.apache.openwhisk.core.entity.ExecManifest.ImageName
 import org.apache.openwhisk.core.entity.size._
@@ -30,27 +30,19 @@ object KontainContainer {
                                           kontain: KontainApi): Future[KontainContainer] = {
     implicit val tid: TransactionId = transid
 
-    val args = Seq(
-      "--device",
-      "/dev/kvm",
-      "--network",
-      "bridge") ++
-      name.map(n => Seq("--name", n)).getOrElse(Seq.empty)
-
-
     for {
       ret <- kontain.importImage(image.publicImageName)
-      containerId <- kontain.run(image.publicImageName, args).recoverWith {
-        case _ =>
+      containerId <- kontain.run(image.publicImageName, name.getOrElse("runk-kontainer")).recoverWith {
+        case e =>
           if (ret)
-            Future.failed(WhiskContainerStartupError(Messages.resourceProvisionError))
+            Future.failed(WhiskContainerStartupError(e.getMessage))
           else
             Future.failed(BlackboxStartupError(Messages.imagePullError(image.publicImageName)))
       }
       ip <- kontain.inspectIPAddress(containerId).recoverWith {
-        case _ =>
+        case e =>
           kontain.rm(containerId)
-          Future.failed(WhiskContainerStartupError(Messages.resourceProvisionError))
+          Future.failed(WhiskContainerStartupError(e.getMessage))
       }
     } yield new KontainContainer(containerId, ip)
   }

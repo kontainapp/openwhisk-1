@@ -5,9 +5,7 @@
         "kind": "nodejs:12",
         "default": false,
         "image": {
-          "prefix": "kontain",
-          "name": "whisk-node-12",
-          "tag": "latest"
+          "name": "/home/yihuaf/private/kontain-images/whisk-nodejs"
         },
         "deprecated": false,
         "attached": {

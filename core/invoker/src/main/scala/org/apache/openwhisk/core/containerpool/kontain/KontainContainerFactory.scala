@@ -2,7 +2,6 @@ package org.apache.openwhisk.core.containerpool.kontain
 
 import akka.actor.ActorSystem
 import org.apache.openwhisk.common.{Logging, TransactionId}
-import org.apache.openwhisk.core.containerpool.docker.DockerClientWithFileAccess
 import org.apache.openwhisk.core.containerpool.{Container, ContainerFactory, ContainerFactoryProvider}
 import org.apache.openwhisk.core.entity.{ByteSize, ExecManifest, InvokerInstanceId}
 import org.apache.openwhisk.core.{ConfigKeys, WhiskConfig}
@@ -20,20 +19,17 @@ object KontainContainerFactoryProvider extends ContainerFactoryProvider {
                         instance: InvokerInstanceId,
                         parameters: Map[String, Set[String]]): ContainerFactory = {
 
-    val dockerClient = {
-      new DockerClientWithFileAccess()(actorSystem.dispatcher)(logging, actorSystem)
-    }
-    val kontainClient = new KontainClient(dockerClient)(actorSystem.dispatcher, actorSystem, logging)
-    new KontainContainerFactory(dockerClient)(instance)(actorSystem, actorSystem.dispatcher, logging, kontainClient)
+    val kontainClient = new KontainClient()(actorSystem.dispatcher, actorSystem, logging)
+    new KontainContainerFactory(instance)(actorSystem, actorSystem.dispatcher, logging, kontainClient)
   }
 }
 
-class KontainContainerFactory(docker: DockerClientWithFileAccess)(instance: InvokerInstanceId)(
-  implicit actorSystem: ActorSystem,
-  ec: ExecutionContext,
-  logging: Logging,
-  kontain: KontainApi,
-  kontainConfig: KontainConfig = loadConfigOrThrow[KontainConfig](ConfigKeys.kontain))
+class KontainContainerFactory(instance: InvokerInstanceId)(implicit actorSystem: ActorSystem,
+                                                           ec: ExecutionContext,
+                                                           logging: Logging,
+                                                           kontain: KontainApi,
+                                                           kontainConfig: KontainConfig =
+                                                             loadConfigOrThrow[KontainConfig](ConfigKeys.kontain))
     extends ContainerFactory {
 
   /**
@@ -74,15 +70,6 @@ class KontainContainerFactory(docker: DockerClientWithFileAccess)(instance: Invo
 
   private def removeAllContainers(): Unit = {
     implicit val transid = TransactionId.invoker
-    val cleaning =
-      docker.ps(filters = Seq("name" -> s"${ContainerFactory.containerNamePrefix(instance)}_"), all = true).flatMap {
-        containers =>
-          logging.info(this, s"removing ${containers.size} action containers.")
-          val removals = containers.map { id =>
-            docker.rm(id)
-          }
-          Future.sequence(removals)
-      }
-    Await.ready(cleaning, 30.seconds)
+    Await.ready(kontain.removeAllContainers(), 1.minutes)
   }
 }

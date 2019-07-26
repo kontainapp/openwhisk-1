@@ -30,7 +30,8 @@ class KontainContainerFactoryTest
     implicit val tid: TransactionId = TransactionId.testing
     val instanceId = InvokerInstanceId(1, userMemory = 100.MB)
     val factory = KontainContainerFactoryProvider.instance(actorSystem, logging, wskConfig, instanceId, Map.empty)
-    val image = ImageName("kontain/whisk-node-12:latest")
+    // Image name for kontain is the path to bundle.
+    val image = ImageName("/home/yihuaf/private/kontain-images/whisk-nodejs")
     val container = factory
       .createContainer(tid, "footest", image, true, 256.MB, 1)
       .futureValue
