@@ -10,7 +10,9 @@ docker build -t kontain/whisk-node-12:latest  .
 
 ```
 $ ./gradlew :core:standalone:build
-$ sudo java -Dwhisk.spi.ContainerFactoryProvider=org.apache.openwhisk.core.containerpool.kontain.KontainContainerFactoryProvider \
+$ sudo java \
+      -Dwhisk.spi.ContainerFactoryProvider=org.apache.openwhisk.core.containerpool.kontain.KontainContainerFactoryProvider \
+      -Dwhisk.spi.LogStoreProvider=org.apache.openwhisk.core.containerpool.kontain.KontainLogStoreProvider \
       -jar bin/openwhisk-standalone.jar \
       -m tools/kontain/kontain-runtimes.json
 ```
