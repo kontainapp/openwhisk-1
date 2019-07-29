@@ -1,6 +1,7 @@
 package org.apache.openwhisk.core.containerpool.kontain
 
 import java.time.Instant
+import java.util.concurrent.atomic.AtomicInteger
 
 import akka.actor.ActorSystem
 import akka.stream.scaladsl.Source
@@ -18,6 +19,8 @@ import scala.concurrent.{ExecutionContext, Future}
 
 object KontainContainer {
 
+  private val portCounter = new AtomicInteger(8080)
+
   def create(transid: TransactionId,
              image: ImageName,
              memory: ByteSize = 256.MB,
@@ -30,21 +33,23 @@ object KontainContainer {
                                           kontain: KontainApi): Future[KontainContainer] = {
     implicit val tid: TransactionId = transid
 
+    val port = portCounter.getAndIncrement()
+
     for {
       ret <- kontain.importImage(image.publicImageName)
-      containerId <- kontain.run(image.publicImageName, name.getOrElse("runk-kontainer")).recoverWith {
+      containerId <- kontain.run(image.publicImageName, name.getOrElse("runk-kontainer"))(port).recoverWith {
         case e =>
           if (ret)
             Future.failed(WhiskContainerStartupError(e.getMessage))
           else
             Future.failed(BlackboxStartupError(Messages.imagePullError(image.publicImageName)))
       }
-      ip <- kontain.inspectIPAddress(containerId).recoverWith {
-        case e =>
-          kontain.rm(containerId)
-          Future.failed(WhiskContainerStartupError(e.getMessage))
-      }
-    } yield new KontainContainer(containerId, ip)
+//      ip <- kontain.inspectIPAddress(containerId).recoverWith {
+//        case e =>
+//          kontain.rm(containerId)
+//          Future.failed(WhiskContainerStartupError(e.getMessage))
+//      }
+    } yield new KontainContainer(containerId, ContainerAddress("localhost", port))
   }
 }
 

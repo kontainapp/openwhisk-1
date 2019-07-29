@@ -15,7 +15,7 @@ trait KontainApi {
 
   def inspectIPAddress(containerId: ContainerId)(implicit transid: TransactionId): Future[ContainerAddress]
 
-  def run(image: String, name: String)(implicit transid: TransactionId): Future[ContainerId]
+  def run(image: String, name: String)(port: Int)(implicit transid: TransactionId): Future[ContainerId]
 
   def importImage(image: String)(implicit transid: TransactionId): Future[Boolean]
 
@@ -41,11 +41,10 @@ class KontainClient()(override implicit val executionContext: ExecutionContext,
     Future.successful(true)
   }
 
-  override def run(image: String, name: String)(implicit transid: TransactionId): Future[ContainerId] = {
+  override def run(image: String, name: String)(port: Int)(implicit transid: TransactionId): Future[ContainerId] = {
     log.info(this, s"kontain run (image ${image}) (name ${name})")
-    runCmd("runk", Seq("create", name, "-b", image), 5.seconds)
-      .flatMap(_ => runCmd("runk", Seq("start", name), 5.seconds))
-      .flatMap(_ => Future(ContainerId(name)))
+    runCmd("runk", Seq("run", name, "-b", image, "--args", port.toString), 5.seconds)
+      .map(_ => ContainerId(name))
   }
 
   protected def runCmd(cmd: String, args: Seq[String], timeout: Duration)(
