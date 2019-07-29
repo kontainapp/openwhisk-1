@@ -9,7 +9,7 @@ import org.apache.openwhisk.core.entity.{ActivationLogs, ExecutableWhiskAction, 
 
 import scala.concurrent.Future
 
-object KontainLogStoreProvide extends LogStoreProvider {
+object KontainLogStoreProvider extends LogStoreProvider {
   override def instance(actorSystem: ActorSystem): LogStore = new KontainLogStore()
 }
 
