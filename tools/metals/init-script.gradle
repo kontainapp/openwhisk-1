@@ -1,0 +1,48 @@
+
+initscript {
+    repositories {
+        mavenCentral()
+        // This might be removed when updating gradle bloop version to a full one
+        maven{
+          url 'https://dl.bintray.com/scalacenter/releases'
+        }
+    }
+
+    dependencies {
+        classpath 'ch.epfl.scala:gradle-bloop_2.11:1.3.2'
+    }
+}
+
+allprojects {
+    apply plugin: bloop.integrations.gradle.BloopPlugin
+    afterEvaluate {
+        repositories {
+            mavenCentral()
+        }
+        configurations {
+            scalaCompilerPlugin
+        }
+        dependencies {
+            scalaCompilerPlugin "org.scalameta:semanticdb-scalac_${gradle.scala.version}:4.2.0"
+        }
+        String semanticDb = configurations.scalaCompilerPlugin.files.find { it.name.contains('semanticdb') }.toString()
+        if (!semanticDb) {
+            throw new RuntimeException("SemanticDB plugin not found!")
+        }
+        tasks.withType(ScalaCompile) {
+            def params = [
+                    '-Xplugin:' + semanticDb,
+                    '-P:semanticdb:synthetics:on',
+                    '-P:semanticdb:failures:warning',
+                    '-P:semanticdb:sourceroot:' + project.rootProject.projectDir,
+                    '-Yrangepos',
+                    '-Xplugin-require:semanticdb'
+            ]
+            if (scalaCompileOptions.additionalParameters)
+              scalaCompileOptions.additionalParameters += params
+            else
+              scalaCompileOptions.additionalParameters = params
+        }
+    }
+}
+    

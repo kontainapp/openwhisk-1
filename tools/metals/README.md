@@ -1,0 +1,1 @@
+To use metals on vscode, run `./gradlew --init-script ./toos/metals/init-script.gradle bloopInstall` from the project root.
