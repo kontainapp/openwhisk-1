@@ -103,6 +103,9 @@ class MesosContainerFactory(config: WhiskConfig,
   /** Inits Mesos framework. */
   val mesosClientActor = clientFactory(as, mesosConfig)
 
+  @volatile
+  private var closed: Boolean = false
+
   subscribe()
 
   /** Subscribes Mesos actor to mesos event stream; retry on timeout (which should be unusual). */
@@ -115,7 +118,7 @@ class MesosContainerFactory(config: WhiskConfig,
       .recoverWith {
         case e =>
           logging.error(this, s"subscribe failed... $e}")
-          subscribe()
+          if (closed) Future.successful(()) else subscribe()
       }
   }
 
@@ -146,7 +149,7 @@ class MesosContainerFactory(config: WhiskConfig,
       userProvidedImage = userProvidedImage,
       memory = memory,
       cpuShares = cpuShares,
-      environment = Map("__OW_API_HOST" -> config.wskApiHost),
+      environment = Map("__OW_API_HOST" -> config.wskApiHost) ++ containerArgs.extraEnvVarMap,
       network = containerArgs.network,
       dnsServers = containerArgs.dnsServers,
       name = Some(name),
@@ -187,6 +190,10 @@ class MesosContainerFactory(config: WhiskConfig,
         case t: Throwable =>
           logging.error(this, s"Mesos framework teardown failed : $t}")
       }
+  }
+
+  def close(): Unit = {
+    closed = true
   }
 }
 object MesosContainerFactory {
