@@ -13,23 +13,24 @@ import scala.concurrent.{Await, ExecutionContext, Future}
 case class KontainConfig(extraArgs: Map[String, Set[String]])
 
 object KontainContainerFactoryProvider extends ContainerFactoryProvider {
-  override def instance(actorSystem: ActorSystem,
-                        logging: Logging,
-                        config: WhiskConfig,
-                        instance: InvokerInstanceId,
-                        parameters: Map[String, Set[String]]): ContainerFactory = {
+  override def instance(
+    actorSystem: ActorSystem,
+    logging: Logging,
+    config: WhiskConfig,
+    instance: InvokerInstanceId,
+    parameters: Map[String, Set[String]]): ContainerFactory = {
 
     val kontainClient = new KontainClient()(actorSystem.dispatcher, actorSystem, logging)
     new KontainContainerFactory(instance)(actorSystem, actorSystem.dispatcher, logging, kontainClient)
   }
 }
 
-class KontainContainerFactory(instance: InvokerInstanceId)(implicit actorSystem: ActorSystem,
-                                                           ec: ExecutionContext,
-                                                           logging: Logging,
-                                                           kontain: KontainApi,
-                                                           kontainConfig: KontainConfig =
-                                                             loadConfigOrThrow[KontainConfig](ConfigKeys.kontain))
+class KontainContainerFactory(instance: InvokerInstanceId)(
+  implicit actorSystem: ActorSystem,
+  ec: ExecutionContext,
+  logging: Logging,
+  kontain: KontainApi,
+  kontainConfig: KontainConfig = loadConfigOrThrow[KontainConfig](ConfigKeys.kontain))
     extends ContainerFactory {
 
   /**
@@ -52,12 +53,13 @@ class KontainContainerFactory(instance: InvokerInstanceId)(implicit actorSystem:
    * - It is desired that the container supports and enforces the specified memory limit and CPU shares.
    * In particular, action memory limits rely on the underlying container technology.
    */
-  override def createContainer(tid: TransactionId,
-                               name: String,
-                               actionImage: ExecManifest.ImageName,
-                               userProvidedImage: Boolean,
-                               memory: ByteSize,
-                               cpuShares: Int)(implicit config: WhiskConfig, logging: Logging): Future[Container] = {
+  override def createContainer(
+    tid: TransactionId,
+    name: String,
+    actionImage: ExecManifest.ImageName,
+    userProvidedImage: Boolean,
+    memory: ByteSize,
+    cpuShares: Int)(implicit config: WhiskConfig, logging: Logging): Future[Container] = {
     logging.info(this, "create a container")
     KontainContainer.create(tid, actionImage, memory, cpuShares, Some(name))
   }
@@ -70,6 +72,6 @@ class KontainContainerFactory(instance: InvokerInstanceId)(implicit actorSystem:
 
   private def removeAllContainers(): Unit = {
     implicit val transid = TransactionId.invoker
-    Await.ready(kontain.removeAllContainers(), 1.minutes)
+    Await.ready(kontain.removeAllContainers(), 5.seconds)
   }
 }
