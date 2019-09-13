@@ -24,10 +24,7 @@ trait KontainApi {
   def removeAllContainers()(implicit transactionId: TransactionId): Future[Unit]
 }
 
-class KontainClient()(
-  override implicit val executionContext: ExecutionContext,
-  implicit val as: ActorSystem,
-  implicit val log: Logging)
+class KontainClient()(implicit val executionContext: ExecutionContext, as: ActorSystem, log: Logging)
     extends KontainApi
     with ProcessRunner {
 
