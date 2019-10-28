@@ -41,8 +41,9 @@ class KontainClient()(implicit val executionContext: ExecutionContext, as: Actor
 
   override def run(image: String, name: String)(port: Int)(implicit transid: TransactionId): Future[ContainerId] = {
     log.info(this, s"kontain run (image ${image}) (name ${name})")
+    // TODO: get rid of the hardcoded km hack
     runCmd(
-      Seq("kontain", "container", "run", image, name, "--args", port.toString, "--debug"),
+      Seq("kontain", "--debug", "container", "run", image, name, "--", "/km", "/node.km", "/app/app.js", port.toString),
       5.seconds,
       "kontain_run")
       .map(_ => ContainerId(name))
