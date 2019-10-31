@@ -153,7 +153,7 @@ object StandaloneOpenWhisk extends SLF4JLogging {
   def initialize(conf: Conf): Unit = {
     configureBuildInfo()
     configureServerPort(conf)
-    configureOSSpecificOpts()
+//    configureOSSpecificOpts()
     initConfigLocation(conf)
     configureRuntimeManifest(conf)
     loadWhiskConfig()
